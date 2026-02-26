@@ -4,7 +4,7 @@
 # 后台运行，检测审批等待和任务完成，发送通知
 
 SESSION="${1:?Usage: $0 <tmux-session-name>}"
-CHAT_ID="6123465134"
+CHAT_ID="YOUR_TELEGRAM_CHAT_ID"
 CHECK_INTERVAL=5  # 秒
 LAST_STATE=""
 NOTIFIED_APPROVAL=""

@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 LOG_FILE = "/tmp/codex_notify_log.txt"
-TELEGRAM_CHAT_ID = "6123465134"
+TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
 
 def log(msg: str):
     with open(LOG_FILE, "a") as f:
