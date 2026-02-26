@@ -208,6 +208,17 @@ codex-agent/
 
 > "用 Codex 帮我在 /path/to/project 实现 XX 功能"
 
+## 更新
+
+已安装的用户更新到最新版本：
+
+```bash
+cd ~/.openclaw/workspace/skills/codex-agent
+git pull
+```
+
+更新日志见 **[CHANGELOG.md](CHANGELOG.md)**。
+
 ## 前置条件
 
 - [OpenClaw](https://github.com/openclaw/openclaw) 已安装并运行

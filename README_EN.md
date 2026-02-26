@@ -196,6 +196,17 @@ After setup, just say something to OpenClaw in Telegram:
 
 > "Use Codex to add XX feature to /path/to/project"
 
+## Update
+
+Already installed? Update to the latest version:
+
+```bash
+cd ~/.openclaw/workspace/skills/codex-agent
+git pull
+```
+
+See **[CHANGELOG.md](CHANGELOG.md)** for what's new.
+
 ## Prerequisites
 
 - [OpenClaw](https://github.com/openclaw/openclaw) installed and running
