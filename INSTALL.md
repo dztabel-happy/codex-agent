@@ -50,24 +50,27 @@ notify = ["python3", "/Users/你的用户名/.openclaw/workspace/skills/codex-ag
 在你的 `~/.zshrc` 或 `~/.bashrc` 中添加：
 
 ```bash
-export CODEX_AGENT_CHAT_ID="你的Telegram_Chat_ID"
-export CODEX_AGENT_NAME="main"  # OpenClaw agent 名称，通常是 main
+export CODEX_AGENT_CHAT_ID="你的Chat_ID"
+export CODEX_AGENT_CHANNEL="telegram"   # 支持 telegram / discord / whatsapp / slack 等 OpenClaw 通道
+export CODEX_AGENT_NAME="main"          # OpenClaw agent 名称，通常是 main
 ```
 
 然后 `source ~/.zshrc`。
 
-获取 Chat ID 的方法：给你的 OpenClaw Telegram bot 发一条消息，然后查看 OpenClaw 日志中的 chat_id。
+获取 Chat ID 的方法：给你的 OpenClaw bot 发一条消息，然后查看 OpenClaw 日志中的 chat_id。
 
 ### 方式 B：直接修改代码
 
 编辑 `hooks/on_complete.py`，修改：
 ```python
-TELEGRAM_CHAT_ID = os.environ.get("CODEX_AGENT_CHAT_ID", "你的Chat_ID")
+CHAT_ID = os.environ.get("CODEX_AGENT_CHAT_ID", "你的Chat_ID")
+CHANNEL = os.environ.get("CODEX_AGENT_CHANNEL", "telegram")
 ```
 
 编辑 `hooks/pane_monitor.sh`，修改：
 ```bash
 CHAT_ID="${CODEX_AGENT_CHAT_ID:-你的Chat_ID}"
+CHANNEL="${CODEX_AGENT_CHANNEL:-telegram}"
 ```
 
 ## 第四步：配置 OpenClaw session 重置

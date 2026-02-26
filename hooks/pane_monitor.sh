@@ -4,14 +4,15 @@
 # 后台运行，检测审批等待和任务完成，发送通知
 #
 # 配置：通过环境变量或修改下方默认值
-#   CODEX_AGENT_CHAT_ID   — Telegram Chat ID
+#   CODEX_AGENT_CHAT_ID   — Chat ID (Telegram/Discord/WhatsApp etc.)
 #   CODEX_AGENT_NAME      — OpenClaw agent 名称（默认 main）
 
 set -uo pipefail
 
 SESSION="${1:?Usage: $0 <tmux-session-name>}"
-CHAT_ID="${CODEX_AGENT_CHAT_ID:-YOUR_TELEGRAM_CHAT_ID}"
+CHAT_ID="${CODEX_AGENT_CHAT_ID:-YOUR_CHAT_ID}"
 AGENT_NAME="${CODEX_AGENT_NAME:-main}"
+CHANNEL="${CODEX_AGENT_CHANNEL:-telegram}"
 CHECK_INTERVAL=5  # 秒
 LAST_STATE=""
 NOTIFIED_APPROVAL=""
@@ -52,7 +53,7 @@ while true; do
 📋 命令: ${CMD:-unknown}
 🔧 session: $SESSION"
             # 1. 通知用户
-            if ! openclaw message send --channel telegram --target "$CHAT_ID" --message "$MSG" --silent 2>>"$LOG_FILE"; then
+            if ! openclaw message send --channel "$CHANNEL" --target "$CHAT_ID" --message "$MSG" --silent 2>>"$LOG_FILE"; then
                 log "⚠️ Telegram notify failed for approval"
             fi
             # 2. 唤醒 agent（后台执行，不阻塞 monitor 循环）
@@ -60,7 +61,7 @@ while true; do
 session: $SESSION
 command: ${CMD:-unknown}
 请 tmux send-keys -t $SESSION '1' Enter 批准，或 '3' Enter 拒绝。"
-            openclaw agent --agent "$AGENT_NAME" --message "$AGENT_MSG" --deliver --channel telegram --timeout 120 2>>"$LOG_FILE" &
+            openclaw agent --agent "$AGENT_NAME" --message "$AGENT_MSG" --deliver --channel "$CHANNEL" --timeout 120 2>>"$LOG_FILE" &
             WAKE_PID=$!
             log "Agent wake fired (pid $WAKE_PID)"
             log "Approval detected: $CMD"

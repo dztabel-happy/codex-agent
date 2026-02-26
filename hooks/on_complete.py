@@ -5,7 +5,7 @@ Codex notify hook — Codex 完成 turn 时：
 2. 唤醒 OpenClaw agent（去检查输出）
 
 配置：通过环境变量或修改下方默认值
-  CODEX_AGENT_CHAT_ID   — Telegram Chat ID
+  CODEX_AGENT_CHAT_ID   — Chat ID (Telegram/Discord/WhatsApp etc.)
   CODEX_AGENT_NAME      — OpenClaw agent 名称（默认 main）
 """
 
@@ -18,7 +18,8 @@ from datetime import datetime
 LOG_FILE = "/tmp/codex_notify_log.txt"
 
 # 从环境变量读取，fallback 到默认值（方便部署时不改代码）
-TELEGRAM_CHAT_ID = os.environ.get("CODEX_AGENT_CHAT_ID", "YOUR_TELEGRAM_CHAT_ID")
+CHAT_ID = os.environ.get("CODEX_AGENT_CHAT_ID", "YOUR_CHAT_ID")
+CHANNEL = os.environ.get("CODEX_AGENT_CHANNEL", "telegram")
 AGENT_NAME = os.environ.get("CODEX_AGENT_NAME", "main")
 
 
@@ -30,14 +31,14 @@ def log(msg: str):
         pass  # 日志写入失败不应影响主流程
 
 
-def notify_telegram(msg: str) -> bool:
+def notify_user(msg: str) -> bool:
     """发送 Telegram 通知，返回是否成功启动进程"""
     try:
         proc = subprocess.Popen(
             [
                 "openclaw", "message", "send",
-                "--channel", "telegram",
-                "--target", TELEGRAM_CHAT_ID,
+                "--channel", CHANNEL,
+                "--target", CHAT_ID,
                 "--message", msg,
             ],
             stdout=subprocess.PIPE,
@@ -47,14 +48,14 @@ def notify_telegram(msg: str) -> bool:
         try:
             _, stderr = proc.communicate(timeout=10)
             if proc.returncode != 0:
-                log(f"telegram notify failed (exit {proc.returncode}): {stderr.decode()[:200]}")
+                log(f"channel notify failed (exit {proc.returncode}): {stderr.decode()[:200]}")
                 return False
         except subprocess.TimeoutExpired:
-            log("telegram notify timeout (10s), process still running")
-        log("telegram notify sent")
+            log("channel notify timeout (10s), process still running")
+        log("channel notify sent")
         return True
     except Exception as e:
-        log(f"telegram notify error: {e}")
+        log(f"channel notify error: {e}")
         return False
 
 
@@ -67,7 +68,7 @@ def wake_agent(msg: str) -> bool:
                 "--agent", AGENT_NAME,
                 "--message", msg,
                 "--deliver",
-                "--channel", "telegram",
+                "--channel", CHANNEL,
                 "--timeout", "120",
             ],
             stdout=subprocess.DEVNULL,
@@ -109,7 +110,7 @@ def main() -> int:
     )
 
     # 1. 给用户发 Telegram 通知
-    tg_ok = notify_telegram(msg)
+    tg_ok = notify_user(msg)
 
     # 2. 唤醒 agent（fire-and-forget）
     agent_msg = (
@@ -121,7 +122,7 @@ def main() -> int:
     agent_ok = wake_agent(agent_msg)
 
     if not tg_ok and not agent_ok:
-        log("⚠️ Both telegram and agent wake failed!")
+        log("⚠️ Both channel notify and agent wake failed!")
 
     return 0
 
