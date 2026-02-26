@@ -1,19 +1,19 @@
-# Codex Agent — 让 AI 替你操作 Codex 🧠
+# Codex Agent — 让 OpenClaw 替你操作 Codex 🧠
 
-> 你躺在床上说一句话，AI 帮你开 Codex、写提示词、处理审批、检查质量、汇报结果。你随时可以打开终端接管。
+> 你躺在床上说一句话，OpenClaw 帮你开 Codex、写提示词、处理审批、检查质量、汇报结果。你随时可以打开终端接管。
 
 **这是一个 [OpenClaw](https://github.com/openclaw/openclaw) 专用 Skill。** 需要 OpenClaw 作为 AI agent 运行时，通过 OpenClaw 的 agent 唤醒、消息投递、cron 等能力驱动整个工作流。
 
 ## 它是什么？
 
-一句话：**OpenClaw agent 代替用户操作 Codex CLI**。
+一句话：**OpenClaw 代替用户操作 Codex CLI**。
 
-Codex 是 OpenAI 的终端编程工具，很强，但需要你坐在电脑前盯着它——写提示词、等输出、审批命令、检查结果。这个 skill 让 OpenClaw agent 替你做这些事。
+Codex 是 OpenAI 的终端编程工具，很强，但需要你坐在电脑前盯着它——写提示词、等输出、审批命令、检查结果。这个 skill 让 OpenClaw 替你做这些事。
 
 本质就两样东西：**tmux + hook**。
 
-- **tmux**：Codex 跑在 tmux session 里，agent 通过 tmux 读输出、发指令，和人在终端里操作一模一样
-- **hook**：Codex 完成任务或等审批时，自动通知用户（Telegram）+ 唤醒 agent 处理
+- **tmux**：Codex 跑在 tmux session 里，OpenClaw 通过 tmux 读输出、发指令，和人在终端里操作一模一样
+- **hook**：Codex 完成任务或等审批时，自动通知用户（Telegram）+ 唤醒 OpenClaw 处理
 
 用户随时可以 `tmux attach` 接入，看 Codex 在干什么，甚至直接接管操作。
 
@@ -21,7 +21,7 @@ Codex 是 OpenAI 的终端编程工具，很强，但需要你坐在电脑前盯
 
 普通用法：你手动写提示词丢给 Codex，Codex 只知道你告诉它的东西。
 
-这个 skill 下的 agent 在发任务给 Codex 之前，会：
+OpenClaw 在发任务给 Codex 之前，会：
 
 1. **识别本机环境**：当前装了哪些 MCP server（Exa 搜索、Chrome 控制等）、哪些 Skills、哪些模型可用
 2. **根据任务选模型**：简单 bug 用快模型，架构设计用强模型，代码搜索用 code 专用模型
@@ -43,41 +43,41 @@ Codex 是 OpenAI 的终端编程工具，很强，但需要你坐在电脑前盯
 
 ```
 你躺在床上 → 在 Telegram 里说"帮我给这个项目加个 XX 功能" →
-Agent 开 Codex 干活 → 中间过程自己处理 → 完事了 Telegram 通知你 →
+OpenClaw 开 Codex 干活 → 中间过程自己处理 → 完事了 Telegram 通知你 →
 不满意？说一句就继续改 → 想看过程？tmux attach 看直播
 ```
 
-**核心价值：用户当老板，agent 当员工，Codex 当工具。**
+**核心价值：用户当老板，OpenClaw 当员工，Codex 当工具。**
 
 ## 工作流程
 
 ```
 1. 用户下任务（Telegram / 终端 / 任何渠道）
      ↓
-2. Agent 理解需求，追问不清楚的地方
+2. OpenClaw 理解需求，追问不清楚的地方
      ↓
-3. Agent 设计提示词，选择执行模式，和用户确认
+3. OpenClaw 设计提示词，选择执行模式，和用户确认
      ↓
-4. Agent 在 tmux 里启动 Codex
+4. OpenClaw 在 tmux 里启动 Codex
      ↓
-5. Codex 干活，Agent 通过 hook 被唤醒：
-   ├── 任务完成 → Agent 检查输出质量
+5. Codex 干活，OpenClaw 通过 hook 被唤醒：
+   ├── 任务完成 → OpenClaw 检查输出质量
    │   ├── 满意 → Telegram 通知用户，汇报结果
    │   └── 不满意 → 让 Codex 继续改
-   ├── 等待审批 → Agent 判断批准/拒绝
+   ├── 等待审批 → OpenClaw 判断批准/拒绝
    └── 方向性问题 → 立即找用户确认
      ↓
 6. 用户收到最终结果
    （整个过程可以随时 tmux attach 接入）
 ```
 
-中间过程 agent 全权处理。用户只在两个时刻被打扰：开始时确认方案，结束时收结果。
+中间过程 OpenClaw 全权处理。用户只在两个时刻被打扰：开始时确认方案，结束时收结果。
 
 ## 技术原理：tmux + hook
 
 ### tmux：像人一样操作终端
 
-Agent 操作 Codex 的方式和人完全一样：
+OpenClaw 操作 Codex 的方式和人完全一样：
 
 ```bash
 # 启动 Codex（和你在终端里敲一样）
@@ -93,9 +93,9 @@ tmux capture-pane -t codex-session -p
 ```
 
 tmux 的好处：
-- **不受 agent turn 超时限制**：Codex 跑多久都行，agent 被唤醒时再来看
+- **不受 OpenClaw turn 超时限制**：Codex 跑多久都行，OpenClaw 被唤醒时再来看
 - **用户可以随时接入**：`tmux attach -t codex-session` 就能看到 Codex 的实时输出
-- **持久化**：agent 重启、网络断开，Codex 都不受影响
+- **持久化**：OpenClaw 重启、网络断开，Codex 都不受影响
 
 ### hook：任务完成和审批等待的自动通知
 
@@ -108,7 +108,7 @@ Codex 自带的 `notify` 配置，任务完成时调用脚本：
 ```
 Codex 完成 turn → on_complete.py
                   ├── Telegram 通知用户（完整回复内容）
-                  └── openclaw agent 唤醒（agent 自动检查输出）
+                  └── openclaw agent 唤醒（OpenClaw 自动检查输出）
 ```
 
 **2. tmux pane monitor（审批等待）**
@@ -118,7 +118,7 @@ Codex 的 notify 不覆盖审批场景，所以用 `pane_monitor.sh` 监控 tmux
 ```
 Codex 弹出审批提示 → pane_monitor.sh 检测到关键词
                      ├── Telegram 通知用户（待审批命令）
-                     └── openclaw agent 唤醒（agent 自主判断批准/拒绝）
+                     └── openclaw agent 唤醒（OpenClaw 自主判断批准/拒绝）
 ```
 
 ### 用户随时可接管
@@ -127,7 +127,7 @@ Codex 弹出审批提示 → pane_monitor.sh 检测到关键词
 
 - `tmux attach -t codex-session`：直接看 Codex 在干什么
 - 在 tmux 里直接打字：接管操作
-- `tmux detach`：看完了，还给 agent 继续
+- `tmux detach`：看完了，还给 OpenClaw 继续
 
 ## 两种审批模式
 
@@ -136,13 +136,13 @@ Codex 弹出审批提示 → pane_monitor.sh 检测到关键词
 | 模式 | 谁审批 | 适用场景 |
 |------|--------|---------|
 | **Codex 自动** (`--full-auto`) | Codex 自己判断 | 常规开发，省心 |
-| **Agent 审批** (默认) | Agent 判断批准/拒绝 | 敏感操作，需要把关 |
+| **OpenClaw 审批** (默认) | OpenClaw 判断批准/拒绝 | 敏感操作，需要把关 |
 
 两种模式下 pane monitor 都会启动（`--full-auto` 偶尔也会弹审批）。
 
-## 知识库：Agent 真正理解 Codex
+## 知识库：OpenClaw 真正理解 Codex
 
-Agent 不是盲目转发命令。它维护一套 Codex 知识库：
+OpenClaw 不是盲目转发命令。它维护一套 Codex 知识库：
 
 | 文件 | 内容 |
 |------|------|
@@ -159,12 +159,12 @@ Agent 不是盲目转发命令。它维护一套 Codex 知识库：
 
 ```
 codex-agent/
-├── SKILL.md                    # Agent 工作流指令（给 agent 读的）
+├── SKILL.md                    # OpenClaw 工作流指令（给 OpenClaw 读的）
 ├── README.md                   # 本文件（给人读的）
 │
 ├── hooks/
-│   ├── on_complete.py          # Codex 完成 → Telegram + Agent 唤醒
-│   ├── pane_monitor.sh         # 审批检测 → Telegram + Agent 唤醒
+│   ├── on_complete.py          # Codex 完成 → Telegram + OpenClaw 唤醒
+│   ├── pane_monitor.sh         # 审批检测 → Telegram + OpenClaw 唤醒
 │   ├── start_codex.sh          # 一键启动（Codex + monitor）
 │   └── stop_codex.sh           # 一键清理
 │
@@ -190,29 +190,48 @@ codex-agent/
 
 ## 前置配置
 
-### 1. Codex notify hook
+### 1. OpenClaw session 重置配置
+
+⚠️ **重要**：OpenClaw 默认每天凌晨 4 点自动重置 session，这会导致 Codex 长任务完成后 hook 唤醒 OpenClaw 时上下文全丢。必须关闭或增大重置间隔：
+
+```json
+// ~/.openclaw/openclaw.json
+{
+  "session": {
+    "reset": {
+      "mode": "idle",
+      "idleMinutes": 52560000  // ~100 年，相当于关闭自动重置
+    }
+  }
+}
+```
+
+OpenClaw 没有 `mode: "off"` 选项，只有 `daily` 和 `idle`。用 `idle` + 极大值是社区通用的 workaround。用户可随时 `/new` 手动重置。
+
+### 2. Codex notify hook
 
 在 `~/.codex/config.toml` 中添加：
 ```toml
 notify = ["python3", "/path/to/skills/codex-agent/hooks/on_complete.py"]
 ```
 
-### 2. 修改通知目标
+### 3. 修改通知目标
 
 编辑 `hooks/on_complete.py` 和 `hooks/pane_monitor.sh`，把 `TELEGRAM_CHAT_ID` 改成你的。
 
-### 3. 验证环境
+### 4. 验证环境
 
 ```bash
 codex --version              # Codex 可用
 tmux -V                      # tmux 可用
-openclaw agent --agent main  # Agent 可唤醒
+openclaw agent --agent main  # OpenClaw 可唤醒
 ```
 
 ## 踩过的坑
 
 | 问题 | 解决 |
 |------|------|
+| OpenClaw 默认每天重置 session，长任务上下文丢失 | 关闭自动重置（见前置配置） |
 | tmux send-keys 文本 + Enter 一起发，Codex 不响应 | 分两次发，中间 sleep 1s |
 | Codex notify 不覆盖审批等待 | pane_monitor.sh 补齐 |
 | `--full-auto` 偶尔也弹审批 | pane monitor 所有模式都启 |
