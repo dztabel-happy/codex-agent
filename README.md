@@ -71,7 +71,7 @@ OpenClaw 开 Codex 干活 → 中间过程自己处理 → 完事了 Telegram �
    （整个过程可以随时 tmux attach 接入）
 ```
 
-中间过程 OpenClaw 全权处理。用户只在两个时刻被打扰：开始时确认方案，结束时收结果。
+中间过程 OpenClaw 全权处理，但**每一步都会同步发送到 Telegram**——任务完成、审批等待、输出内容，用户在手机上实时可见。你可以选择不管（让 OpenClaw 自主处理），也可以随时插话干预。
 
 ## 技术原理：tmux + hook
 
@@ -107,9 +107,11 @@ Codex 自带的 `notify` 配置，任务完成时调用脚本：
 
 ```
 Codex 完成 turn → on_complete.py
-                  ├── Telegram 通知用户（完整回复内容）
-                  └── openclaw agent 唤醒（OpenClaw 自动检查输出）
+                  ├── 📱 Telegram 通知用户（Codex 完整回复内容）
+                  └── 🤖 openclaw agent 唤醒（OpenClaw 自动检查输出）
 ```
+
+用户在 Telegram 上能看到 Codex 每次回复的完整内容，相当于实时监控。
 
 **2. tmux pane monitor（审批等待）**
 
@@ -117,9 +119,11 @@ Codex 的 notify 不覆盖审批场景，所以用 `pane_monitor.sh` 监控 tmux
 
 ```
 Codex 弹出审批提示 → pane_monitor.sh 检测到关键词
-                     ├── Telegram 通知用户（待审批命令）
-                     └── openclaw agent 唤醒（OpenClaw 自主判断批准/拒绝）
+                     ├── 📱 Telegram 通知用户（待审批的具体命令）
+                     └── 🤖 openclaw agent 唤醒（OpenClaw 自主判断批准/拒绝）
 ```
+
+两套机制都是**双通道同时触发**：用户和 OpenClaw 同时收到消息。用户看到后可以不管（OpenClaw 会处理），也可以直接回复干预。
 
 ### 用户随时可接管
 
