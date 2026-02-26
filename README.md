@@ -228,7 +228,8 @@ notify = ["python3", "/path/to/skills/codex-agent/hooks/on_complete.py"]
 ```bash
 codex --version              # Codex 可用
 tmux -V                      # tmux 可用
-openclaw agent --agent main  # OpenClaw 可唤醒
+# 测试 OpenClaw 唤醒（--message 必填）
+openclaw agent --agent main --message "ping" --deliver --channel telegram --timeout 10
 ```
 
 ## 踩过的坑
@@ -237,6 +238,7 @@ openclaw agent --agent main  # OpenClaw 可唤醒
 |------|------|
 | OpenClaw 默认每天重置 session，长任务上下文丢失 | 关闭自动重置（见前置配置） |
 | tmux send-keys 文本 + Enter 一起发，Codex 不响应 | 分两次发，中间 sleep 1s |
+| `--full-auto` 与 shell alias 冲突报错 | 检查 `~/.bashrc` / `~/.zshrc` 是否有 codex alias，确保 tmux 里用的是原生命令 |
 | Codex notify 不覆盖审批等待 | pane_monitor.sh 补齐 |
 | `--full-auto` 偶尔也弹审批 | pane monitor 所有模式都启 |
 | Codex memories 不工作 | `disable_response_storage = true` + custom provider 不兼容，不启用 |

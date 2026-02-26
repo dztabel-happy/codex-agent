@@ -5,8 +5,10 @@
 # 自动完成：
 # 1. 创建 tmux session
 # 2. 启动 Codex TUI
-# 3. 启动 pane monitor（非 full-auto 模式）
+# 3. 启动 pane monitor
 # 4. session 结束时自动清理 monitor
+
+set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SESSION="${1:?Usage: $0 <session-name> <workdir> [--full-auto]}"
@@ -19,6 +21,12 @@ if ! command -v tmux &>/dev/null; then
     exit 1
 fi
 
+# 检查 codex
+if ! command -v codex &>/dev/null; then
+    echo "❌ codex not found"
+    exit 1
+fi
+
 # 检查 workdir
 if [ ! -d "$WORKDIR" ]; then
     echo "❌ Directory not found: $WORKDIR"
@@ -26,8 +34,8 @@ if [ ! -d "$WORKDIR" ]; then
 fi
 
 # 杀掉同名旧 session
-tmux kill-session -t "$SESSION" 2>/dev/null
-pkill -f "pane_monitor.sh $SESSION" 2>/dev/null
+tmux kill-session -t "$SESSION" 2>/dev/null || true
+pkill -f "pane_monitor.sh $SESSION" 2>/dev/null || true
 
 # 构建 codex 命令
 CODEX_CMD="codex --no-alt-screen"
@@ -36,8 +44,23 @@ if [ "$FULL_AUTO" = "--full-auto" ]; then
 fi
 
 # 1. 创建 tmux session + 启动 Codex
-tmux new-session -d -s "$SESSION" -c "$WORKDIR"
-tmux send-keys -t "$SESSION" "$CODEX_CMD" Enter
+if ! tmux new-session -d -s "$SESSION" -c "$WORKDIR"; then
+    echo "❌ Failed to create tmux session: $SESSION"
+    exit 1
+fi
+
+if ! tmux send-keys -t "$SESSION" "$CODEX_CMD" Enter; then
+    echo "❌ Failed to send command to tmux session: $SESSION"
+    tmux kill-session -t "$SESSION" 2>/dev/null || true
+    exit 1
+fi
+
+# 等待 Codex 启动（检查进程是否存在）
+sleep 2
+if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    echo "❌ tmux session died immediately, Codex may have failed to start"
+    exit 1
+fi
 
 # 2. 启动 pane monitor（所有模式都启动，full-auto 偶尔也会弹审批）
 MONITOR_PID_FILE="/tmp/codex_monitor_${SESSION}.pid"
@@ -48,7 +71,7 @@ echo "✅ Codex started"
 echo "   session:  $SESSION"
 echo "   workdir:  $WORKDIR"
 echo "   mode:     ${FULL_AUTO:-default-approval}"
-echo "   monitor:  PID $(cat $MONITOR_PID_FILE)"
+echo "   monitor:  PID $(cat "$MONITOR_PID_FILE")"
 echo ""
-echo "📎 tmux attach -t $SESSION    # 涛哥直接查看"
-echo "🔪 tmux kill-session -t $SESSION && kill \$(cat $MONITOR_PID_FILE)  # 清理"
+echo "📎 tmux attach -t $SESSION    # 直接查看"
+echo "🔪 ./stop_codex.sh $SESSION   # 一键清理"

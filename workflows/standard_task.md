@@ -75,10 +75,14 @@ sleep 3
 tmux capture-pane -t codex-<任务名> -p -S -20
 
 # 如需切换模型
-tmux send-keys -t codex-<任务名> '/model gpt-5.2 xhigh' Enter
+tmux send-keys -t codex-<任务名> '/model gpt-5.2 xhigh'
+sleep 1
+tmux send-keys -t codex-<任务名> Enter
 
-# 发送提示词
-tmux send-keys -t codex-<任务名> '<提示词>' Enter
+# 发送提示词（⚠️ 文本和 Enter 必须分两次发，中间 sleep 1s）
+tmux send-keys -t codex-<任务名> '<提示词>'
+sleep 1
+tmux send-keys -t codex-<任务名> Enter
 ```
 
 ### [6] 等待

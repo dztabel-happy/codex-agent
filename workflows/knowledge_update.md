@@ -24,17 +24,20 @@ cat ~/.codex/config.toml
 ### Step 2: 拉取远程数据
 
 ```bash
+# 创建缓存目录
+mkdir -p /tmp/codex-knowledge-cache
+
 # JSON Schema（最权威的配置参考）
-curl -s "https://raw.githubusercontent.com/openai/codex/main/codex-rs/core/config.schema.json" > cache/config_schema.json
+curl -s "https://raw.githubusercontent.com/openai/codex/main/codex-rs/core/config.schema.json" > /tmp/codex-knowledge-cache/config_schema.json
 
 # 源码中的斜杠命令
-curl -s "https://raw.githubusercontent.com/openai/codex/main/codex-rs/tui/src/slash_command.rs" > cache/slash_commands.rs
+curl -s "https://raw.githubusercontent.com/openai/codex/main/codex-rs/tui/src/slash_command.rs" > /tmp/codex-knowledge-cache/slash_commands.rs
 
 # GitHub releases
-curl -s "https://api.github.com/repos/openai/codex/releases?per_page=10" > cache/releases.json
+curl -s "https://api.github.com/repos/openai/codex/releases?per_page=10" > /tmp/codex-knowledge-cache/releases.json
 
 # 文档目录
-curl -s "https://api.github.com/repos/openai/codex/contents/docs" > cache/docs_listing.json
+curl -s "https://api.github.com/repos/openai/codex/contents/docs" > /tmp/codex-knowledge-cache/docs_listing.json
 ```
 
 ### Step 3: 浏览官方文档（如可访问）
