@@ -2,14 +2,32 @@
 # Codex TUI pane 监控器
 # 用法: ./pane_monitor.sh <tmux-session-name>
 # 后台运行，检测审批等待和任务完成，发送通知
+#
+# 配置：通过环境变量或修改下方默认值
+#   CODEX_AGENT_CHAT_ID   — Telegram Chat ID
+#   CODEX_AGENT_NAME      — OpenClaw agent 名称（默认 main）
+
+set -uo pipefail
 
 SESSION="${1:?Usage: $0 <tmux-session-name>}"
-CHAT_ID="YOUR_TELEGRAM_CHAT_ID"
+CHAT_ID="${CODEX_AGENT_CHAT_ID:-YOUR_TELEGRAM_CHAT_ID}"
+AGENT_NAME="${CODEX_AGENT_NAME:-main}"
 CHECK_INTERVAL=5  # 秒
 LAST_STATE=""
 NOTIFIED_APPROVAL=""
+CAPTURE_LINES=30  # 抓取行数（增大以减少漏报）
 
-log() { echo "[$(date '+%H:%M:%S')] $1" >> /tmp/codex_monitor.log; }
+LOG_FILE="/tmp/codex_monitor_${SESSION}.log"
+
+log() { echo "[$(date '+%H:%M:%S')] $1" >> "$LOG_FILE"; }
+
+# 清理函数：退出时删除 PID 文件
+cleanup() {
+    local pid_file="/tmp/codex_monitor_${SESSION}.pid"
+    rm -f "$pid_file"
+    log "Monitor exiting, cleaned up PID file"
+}
+trap cleanup EXIT
 
 log "Monitor started for session: $SESSION"
 
@@ -20,10 +38,10 @@ while true; do
         exit 0
     fi
 
-    OUTPUT=$(tmux capture-pane -t "$SESSION" -p -S -15 2>/dev/null)
+    OUTPUT=$(tmux capture-pane -t "$SESSION" -p -S -"$CAPTURE_LINES" 2>/dev/null)
 
     # 检测审批等待
-    if echo "$OUTPUT" | grep -q "Would you like to run\|Press enter to confirm"; then
+    if echo "$OUTPUT" | grep -q "Would you like to run\|Press enter to confirm\|approve this\|allow this"; then
         # 提取要执行的命令
         CMD=$(echo "$OUTPUT" | grep '^\s*\$' | tail -1 | sed 's/^\s*\$ //')
         STATE="approval:$CMD"
@@ -33,14 +51,18 @@ while true; do
             MSG="⏸️ Codex 等待审批
 📋 命令: ${CMD:-unknown}
 🔧 session: $SESSION"
-            # 1. 通知涛哥
-            openclaw message send --channel telegram --target "$CHAT_ID" --message "$MSG" --silent 2>/dev/null &
+            # 1. 通知用户
+            if ! openclaw message send --channel telegram --target "$CHAT_ID" --message "$MSG" --silent 2>>"$LOG_FILE"; then
+                log "⚠️ Telegram notify failed for approval"
+            fi
             # 2. 唤醒 agent
             AGENT_MSG="[Codex Monitor] 审批等待，请处理。
 session: $SESSION
 command: ${CMD:-unknown}
 请 tmux send-keys -t $SESSION '1' Enter 批准，或 '3' Enter 拒绝。"
-            openclaw agent --agent main --message "$AGENT_MSG" --deliver --channel telegram --timeout 120 2>/dev/null &
+            if ! openclaw agent --agent "$AGENT_NAME" --message "$AGENT_MSG" --deliver --channel telegram --timeout 120 2>>"$LOG_FILE" &then
+                log "⚠️ Agent wake failed for approval"
+            fi
             log "Approval detected: $CMD"
         fi
 

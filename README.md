@@ -192,45 +192,32 @@ codex-agent/
     └── last_updated.txt        # 知识库最后更新日期
 ```
 
-## 前置配置
+## 快速开始
 
-### 1. OpenClaw session 重置配置
+详细的安装步骤见 **[INSTALL.md](INSTALL.md)**（7 步，约 5 分钟）。
 
-⚠️ **重要**：OpenClaw 默认每天凌晨 4 点自动重置 session，这会导致 Codex 长任务完成后 hook 唤醒 OpenClaw 时上下文全丢。必须关闭或增大重置间隔：
+或者，把下面这段话直接发给你的 OpenClaw，它会自动帮你完成配置：
 
-```json
-// ~/.openclaw/openclaw.json
-{
-  "session": {
-    "reset": {
-      "mode": "idle",
-      "idleMinutes": 52560000  // ~100 年，相当于关闭自动重置
-    }
-  }
-}
-```
+> 请帮我安装和配置 codex-agent skill。步骤：
+> 1. 将 codex-agent skill 克隆到 ~/.openclaw/workspace/skills/codex-agent/
+> 2. 在 ~/.codex/config.toml 中添加 notify hook，路径指向 hooks/on_complete.py
+> 3. 设置环境变量 CODEX_AGENT_CHAT_ID 为我的 Telegram Chat ID
+> 4. 配置 OpenClaw session 不自动重置（idle + 52560000 分钟）
+> 5. 设置脚本执行权限
+> 6. 运行验证测试确认所有组件正常
+> 安装指南在 skills/codex-agent/INSTALL.md
 
-OpenClaw 没有 `mode: "off"` 选项，只有 `daily` 和 `idle`。用 `idle` + 极大值是社区通用的 workaround。用户可随时 `/new` 手动重置。
+配置完成后，在 Telegram 里对 OpenClaw 说一句话就能用：
 
-### 2. Codex notify hook
+> "用 Codex 帮我在 /path/to/project 实现 XX 功能"
 
-在 `~/.codex/config.toml` 中添加：
-```toml
-notify = ["python3", "/path/to/skills/codex-agent/hooks/on_complete.py"]
-```
+## 前置条件
 
-### 3. 修改通知目标
-
-编辑 `hooks/on_complete.py` 和 `hooks/pane_monitor.sh`，把 `TELEGRAM_CHAT_ID` 改成你的。
-
-### 4. 验证环境
-
-```bash
-codex --version              # Codex 可用
-tmux -V                      # tmux 可用
-# 测试 OpenClaw 唤醒（--message 必填）
-openclaw agent --agent main --message "ping" --deliver --channel telegram --timeout 10
-```
+- [OpenClaw](https://github.com/openclaw/openclaw) 已安装并运行
+- [Codex CLI](https://github.com/openai/codex) 已安装
+- tmux 已安装
+- Telegram 已配置为 OpenClaw 消息通道
+- ⚠️ **OpenClaw session 自动重置必须关闭或调大**（默认每天重置会丢失 Codex 任务上下文，详见 [INSTALL.md](INSTALL.md#第四步配置-openclaw-session-重置)）
 
 ## 踩过的坑
 
