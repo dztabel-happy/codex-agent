@@ -323,7 +323,7 @@ tmux send-keys -t codex-fix78 'codex --no-alt-screen --full-auto' Enter
 3. 用户明确要求时才用 `danger-full-access` 沙盒模式
 4. 修改 config.toml 前**必须**查阅 config_schema.md 确认合法性
 5. 模型切换后如果 API 格式不兼容，需要 `/new` 重置会话
-6. pane_monitor 的 Telegram chat ID 硬编码在脚本中，更换用户需修改
+6. 通知目标通过环境变量 `CODEX_AGENT_CHAT_ID` 和 `CODEX_AGENT_NAME` 配置，也可直接修改脚本中的默认值
 
 ---
 
@@ -332,9 +332,9 @@ tmux send-keys -t codex-fix78 'codex --no-alt-screen --full-auto' Enter
 首次使用前确认：
 
 - [ ] `~/.codex/config.toml` 中已添加 `notify = ["python3", "<path>/on_complete.py"]`
-- [ ] on_complete.py 中的 `TELEGRAM_CHAT_ID` 正确
-- [ ] pane_monitor.sh 中的 `CHAT_ID` 正确
+- [ ] 环境变量 `CODEX_AGENT_CHAT_ID` 已设置（或已修改脚本中的默认值）
+- [ ] 环境变量 `CODEX_AGENT_NAME` 已设置（默认 `main`，通常不需要改）
 - [ ] `codex --version` 可用
 - [ ] `openclaw message send` 可发 Telegram
-- [ ] `openclaw agent --agent main` 可唤醒 agent
+- [ ] `openclaw agent --agent main --message "test"` 可唤醒 agent
 - [ ] tmux 已安装

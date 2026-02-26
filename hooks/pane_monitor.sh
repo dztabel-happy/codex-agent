@@ -60,7 +60,7 @@ while true; do
 session: $SESSION
 command: ${CMD:-unknown}
 请 tmux send-keys -t $SESSION '1' Enter 批准，或 '3' Enter 拒绝。"
-            if ! openclaw agent --agent "$AGENT_NAME" --message "$AGENT_MSG" --deliver --channel telegram --timeout 120 2>>"$LOG_FILE" &then
+            if ! openclaw agent --agent "$AGENT_NAME" --message "$AGENT_MSG" --deliver --channel telegram --timeout 120 2>>"$LOG_FILE"; then
                 log "⚠️ Agent wake failed for approval"
             fi
             log "Approval detected: $CMD"

@@ -70,8 +70,8 @@ def wake_agent(msg: str) -> bool:
                 "--channel", "telegram",
                 "--timeout", "120",
             ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
         log(f"agent wake fired (pid {proc.pid})")
         return True
