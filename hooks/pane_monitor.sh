@@ -55,14 +55,14 @@ while true; do
             if ! openclaw message send --channel telegram --target "$CHAT_ID" --message "$MSG" --silent 2>>"$LOG_FILE"; then
                 log "⚠️ Telegram notify failed for approval"
             fi
-            # 2. 唤醒 agent
+            # 2. 唤醒 agent（后台执行，不阻塞 monitor 循环）
             AGENT_MSG="[Codex Monitor] 审批等待，请处理。
 session: $SESSION
 command: ${CMD:-unknown}
 请 tmux send-keys -t $SESSION '1' Enter 批准，或 '3' Enter 拒绝。"
-            if ! openclaw agent --agent "$AGENT_NAME" --message "$AGENT_MSG" --deliver --channel telegram --timeout 120 2>>"$LOG_FILE"; then
-                log "⚠️ Agent wake failed for approval"
-            fi
+            openclaw agent --agent "$AGENT_NAME" --message "$AGENT_MSG" --deliver --channel telegram --timeout 120 2>>"$LOG_FILE" &
+            WAKE_PID=$!
+            log "Agent wake fired (pid $WAKE_PID)"
             log "Approval detected: $CMD"
         fi
 
